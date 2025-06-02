@@ -9,7 +9,7 @@ API_HASH = getenv("API_HASH")
 # config
 CHUNK = 20
 PREFIXES = ["?"]
-AUTH_USERS = ["@AmartyaAnand"]
+AUTH_USERS = ["me"]
 
 # DC info
 DCS = {
