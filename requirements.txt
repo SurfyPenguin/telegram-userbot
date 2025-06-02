@@ -1,0 +1,5 @@
+pyrofork == 2.3.62
+TgCrypto-pyrofork
+python-dotenv
+ping3
+requests
