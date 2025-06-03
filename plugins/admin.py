@@ -45,6 +45,17 @@ DEMOTE = ChatPrivileges(
     is_anonymous=False
 )
 
+async def get_user(app : Client, message : Message):
+    user = None
+    if len(message.command) > 1 and (message.command[1].startswith("@") or message.command[1].isnumeric()):
+        user = await app.get_users(message.command[1])
+
+    elif message.reply_to_message:
+        user = message.reply_to_message.from_user
+    else:
+        await message.reply("Provide a user")
+    return user
+
 # Purge func
 async def purge(app : Client, message : Message) -> int:
     message_ids = [id for id in range(message.reply_to_message.id , message.id + 1)]
@@ -81,18 +92,8 @@ async def spurge_command(app : Client, message : Message) -> None:
 @Client.on_message(filters.command("ban", prefixes= PREFIXES) & filters.user(AUTH_USERS))
 async def ban_command(app : Client, message : Message):
 
-    user = None
-
     try:
-
-        if len(message.command) > 1 and (message.command[1].startswith("@") or message.command[1].isnumeric()):
-            user = await app.get_users(message.command[1])
-
-        elif message.reply_to_message:
-            user = message.reply_to_message.from_user
-        
-        else:
-            await message.reply("Provide a user")
+        user = await get_user(app, message)
     
         if user:
             user_id = user.id
@@ -110,18 +111,8 @@ async def ban_command(app : Client, message : Message):
 @Client.on_message(filters.command("unban", prefixes= PREFIXES) & filters.user(AUTH_USERS))
 async def unban_command(app : Client, message : Message):
 
-    user = None
-
     try:
-
-        if len(message.command) > 1 and (message.command[1].startswith("@") or message.command[1].isnumeric()):
-            user = await app.get_users(message.command[1])
-
-        elif message.reply_to_message:
-            user = message.reply_to_message.from_user
-        
-        else:
-            await message.reply("Provide a user")
+        user = await get_user(app, message)
     
         if user:
             user_id = user.id
@@ -162,17 +153,9 @@ async def promote_command(app : Client, message : Message):
 
 @Client.on_message(filters.command("demote", prefixes= PREFIXES) & filters.user(AUTH_USERS))
 async def demote_command(app : Client, message : Message):
-    user = None
 
     try:
-        if len(message.command) > 1 and (message.command[1].startswith("@") or message.command[1].isnumeric()):
-            user = await app.get_users(message.command[1])
-
-        elif message.reply_to_message:
-            user = message.reply_to_message.from_user
-            
-        else:
-            await message.reply("Provide a user")
+        user = await get_user(app, message)
         
         if user:
             await app.promote_chat_member(message.chat.id, user.id, privileges= DEMOTE)
