@@ -4,3 +4,4 @@ python-dotenv
 ping3
 requests
 py-tgcalls
+yt-dlp

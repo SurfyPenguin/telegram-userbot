@@ -3,6 +3,7 @@
 **/__pycache__
 *.pyc
 *.session
+*.session-journal
 *.json
 *.mp4
 *.mp3
