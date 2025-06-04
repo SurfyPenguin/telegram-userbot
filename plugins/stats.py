@@ -25,3 +25,4 @@ async def uptime_command(_, message : Message):
 
     uptime = end_time.replace(microsecond=0) - start_time.replace(microsecond=0)
     format = format = f"<pre language='status'>Alive! bot is currently running... \nUptime - {uptime} \nPing - {ping}ms</pre><pre language='resources'>Cpu - {cpu}% \nMemory - {memory}%</pre>"
+    await message.reply(format)
