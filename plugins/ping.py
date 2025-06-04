@@ -10,8 +10,8 @@ from time import perf_counter
 async def pingdc_command(_, message : Message):
     dc_info = ""
     for dc in DCS:
-        dc_info += f"```DC{dc}\n{DCS[dc]["location"]} - {await do_ping(DCS[dc]["ip"])}ms```"
-    await message.reply(dc_info, quote = True, parse_mode = ParseMode.MARKDOWN)
+        dc_info += f"<pre language='DC{dc}'>{DCS[dc]["location"]} - {await do_ping(DCS[dc]["ip"])}ms</pre>"
+    await message.reply(dc_info, quote = True, parse_mode = ParseMode.HTML)
 
 # Ping client command
 @Client.on_message(filters.command("ping", prefixes= PREFIXES) & filters.user(AUTH_USERS))
