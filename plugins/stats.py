@@ -1,7 +1,9 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
+from pyrogram.errors import SlowmodeWait
 from config import PREFIXES, AUTH_USERS, DCS
 from helpers.ping import do_ping
+import time
 from datetime import datetime
 from psutil import cpu_percent, virtual_memory
 
@@ -22,6 +24,4 @@ async def uptime_command(_, message : Message):
     cpu, memory = await get_usage()
 
     uptime = end_time.replace(microsecond=0) - start_time.replace(microsecond=0)
-    format = format = f"<pre language='status'>status Alive! bot is currently running... \nUptime - {uptime} \nPing - {ping}ms</pre><pre language='resources'>Cpu - {cpu}% \nMemory - {memory}%</pre>"
-
-    await message.reply(format)
+    format = format = f"<pre language='status'>Alive! bot is currently running... \nUptime - {uptime} \nPing - {ping}ms</pre><pre language='resources'>Cpu - {cpu}% \nMemory - {memory}%</pre>"
