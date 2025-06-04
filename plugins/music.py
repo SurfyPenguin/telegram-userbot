@@ -20,12 +20,12 @@ class Stream:
             await self.player.start()
             self.running = True
 
-    async def stream(self, chat_id : int | str, link : str):
+    async def stream(self, chat_id : int | str, link : str, audio_quality = AudioQuality.HIGH, video_quality= VideoQuality.HD_720p):
             await self.player.play(chat_id, 
                                 MediaStream(
                                         link,
-                                        AudioQuality.HIGH, 
-                                        VideoQuality.HD_720p
+                                        audio_quality, 
+                                        video_quality
                                     )
                                 )
             await idle()
@@ -58,6 +58,7 @@ streamer = Stream(app)
 async def play_command(_, message : Message):
     await streamer.start()
     chat_id, link = message.chat.id, message.command[1]
+
     try:
         await streamer.stream(chat_id, link)
     except exceptions.ClientNotStarted:

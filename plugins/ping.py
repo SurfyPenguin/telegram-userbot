@@ -10,7 +10,7 @@ from time import perf_counter
 async def pingdc_command(_, message : Message):
     dc_info = ""
     for dc in DCS:
-        dc_info += f"```{dc}\n{DCS[dc]["location"]} - {await do_ping(DCS[dc]["ip"])}ms```"
+        dc_info += f"```DC{dc}\n{DCS[dc]["location"]} - {await do_ping(DCS[dc]["ip"])}ms```"
     await message.reply(dc_info, quote = True, parse_mode = ParseMode.MARKDOWN)
 
 # Ping client command
