@@ -5,3 +5,4 @@ ping3
 requests
 py-tgcalls
 yt-dlp
+psutil
