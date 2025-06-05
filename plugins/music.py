@@ -9,6 +9,7 @@ from pytgcalls import PyTgCalls, idle, filters as fl
 from config import PREFIXES, AUTH_USERS
 from pytgcalls import exceptions
 from yt_dlp import YoutubeDL
+from typing import Dict, List, Tuple
 
 LIMIT = 40
 
@@ -24,10 +25,10 @@ ytdl = YoutubeDL(ydl_opts)
 
 class Stream:
     def __init__(self, app : Client):
-        self.app = app
-        self.player = PyTgCalls(app)
-        self.running = False
-        self.queue = {}
+        self.app : Client = app
+        self.player : PyTgCalls = PyTgCalls(app)
+        self.running : bool = False
+        self.queue : Dict[int, List[Tuple[str, str]]] = {}
 
     async def start(self):
         if not self.running:
@@ -38,7 +39,7 @@ class Stream:
         if chat_id not in self.queue.keys():
             self.queue[chat_id] = []
         title = await self.get_title(link)
-        self.queue[chat_id].append([link, title])
+        self.queue[chat_id].append((link, title))
 
     async def get_title(self, link):
         title = ytdl.extract_info(link, False).get("title")
@@ -85,7 +86,7 @@ class Stream:
             case "um":
                 await self.player.unmute(chat_id)
                 await message.reply("`unmuted...`")
-                
+
             case _:
                 await message.reply("`Invalid media action`")
 
