@@ -11,6 +11,10 @@ CHUNK = 20
 PREFIXES = ["?"]
 AUTH_USERS = ["me"]
 
+# Music/Video stream config
+TITLE_LIMIT = 40
+MUSIC_PREFIXES = ["!"]
+
 # DC info
 DCS = {
     1 : {"location" : "MIA, Miami FL, USA", "ip" : "149.154.175.53"},
