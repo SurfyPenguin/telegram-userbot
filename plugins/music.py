@@ -4,7 +4,7 @@ from pytgcalls import PyTgCalls, idle, filters as fl, exceptions
 from config import MUSIC_USERS , TITLE_LIMIT, MUSIC_PREFIXES
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from pyrogram.enums import ParseMode
+from pyrogram.enums import ParseMode, ChatMemberStatus
 from pytgcalls.types import MediaStream, AudioQuality, VideoQuality, StreamEnded
 from pyrogram.errors import ChatAdminRequired
 from yt_dlp import YoutubeDL
@@ -99,14 +99,24 @@ class Streamer:
 streamer = Streamer(app)
 
 @Client.on_message(filters.command("play", prefixes = MUSIC_PREFIXES) & filters.user(MUSIC_USERS))
-async def play_command(_, message : Message):
+async def play_command(app : Client, message : Message):
+
+    chat_id = message.chat.id
+    chat_member = await app.get_chat_member(chat_id, "me")
+
+    if chat_member.status not in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]:
+        await message.reply("<b>I'm not admin in this chat</b>")
+        return
+    
+    if not chat_member.privileges.can_manage_video_chats:
+        await message.reply("<b>I don't have permissions to manage video chats")
+        return
 
     if len(message.command) != 2:
         await message.reply("<b>Usage <code>/play yt-link</code></b>", parse_mode = ParseMode.HTML)
         return
     
     link = message.command[1]
-    chat_id = message.chat.id
     try:
         await streamer.add_queue(chat_id, link)
         await streamer.stream(chat_id)
@@ -126,15 +136,41 @@ async def play_command(_, message : Message):
 
 @Client.on_message(filters.command("add", prefixes = MUSIC_PREFIXES) & filters.user(MUSIC_USERS))
 async def add_command(_, message : Message):
-    if message.chat.id not in streamer.queue.keys():
-        await streamer.add_queue(message.chat.id, message.command[1])
-        await streamer.stream(message.chat.id)
-        return
+    chat_id = message.chat.id
 
     if len(message.command) != 2:
         await message.reply("<b>Usage: <code>/add yt-link</code></b>")
         return
     
+    if message.chat.id not in streamer.queue.keys():
+        chat_member = await app.get_chat_member(chat_id, "me")
+
+        if chat_member.status not in [ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER]:
+            await message.reply("<b>I'm not admin in this chat</b>")
+            return
+    
+        if not chat_member.privileges.can_manage_video_chats:
+            await message.reply("<b>I don't have permissions to manage video chats")
+            return
+        
+        try:
+            await streamer.add_queue(chat_id, message.command[1])
+            await streamer.stream(chat_id)
+
+        except exceptions.ClientNotStarted:
+            await message.reply("<b>Client not started yet</b>")
+        except FileNotFoundError:
+            await message.reply("<b>File not found</b>")
+        except exceptions.NoAudioSourceFound:
+            await message.reply("<b>Audio source has no audio</b>")
+        except exceptions.NoVideoSourceFound:
+            await message.reply("<b>Video source has no video</b>")
+        except exceptions.YtDlpError:
+            await message.reply("<b>Unexpected Yt-Dlp error: check logs</b>")
+        except ChatAdminRequired:
+            await message.reply("<b>I don't have permissions to manage video calls in this chat</b>")
+        return
+
     await message.reply("<b>Adding to queue...</b>")
     await streamer.add_queue(message.chat.id, message.command[1])
 
