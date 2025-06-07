@@ -48,16 +48,17 @@ class Streamer:
         await self.start()
         await self._app.send_message(chat_id, f"<b>Now streaming <a href='{link}'>{title}</a></b>", disable_web_page_preview = True)
 
-        if "music" in link:
+        if "music.youtube.com" in link:
+            link = link.replace("music.youtube.com", "youtube.com")
+            print(link)
             await self.player.play(
                 chat_id = chat_id,
                 stream = MediaStream(
                     media_path = link,
                     audio_parameters = audio_quality,
                     video_flags = MediaStream.Flags.IGNORE,
-                )
+                ) 
             )
-            return
 
         await self.player.play(
             chat_id = chat_id,
@@ -135,7 +136,7 @@ async def play_command(app : Client, message : Message):
         await message.reply("<b>I don't have permissions to manage video calls in this chat</b>")
 
 @Client.on_message(filters.command("add", prefixes = MUSIC_PREFIXES) & filters.user(MUSIC_USERS))
-async def add_command(_, message : Message):
+async def add_command(app : Client, message : Message):
     chat_id = message.chat.id
 
     if len(message.command) != 2:
