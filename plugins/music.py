@@ -50,7 +50,6 @@ class Streamer:
 
         if "music.youtube.com" in link:
             link = link.replace("music.youtube.com", "youtube.com")
-            print(link)
             await self.player.play(
                 chat_id = chat_id,
                 stream = MediaStream(
@@ -119,8 +118,19 @@ async def play_command(app : Client, message : Message):
     
     link = message.command[1]
     try:
+        if chat_id in streamer.queue.keys():
+
+            if len(streamer.queue[chat_id]) > 0:
+
+                title = streamer.get_title(link)
+                streamer.queue[chat_id][0] = [title, link]
+
+                await streamer.stream(chat_id)
+                return
+        
         await streamer.add_queue(chat_id, link)
         await streamer.stream(chat_id)
+            
 
     except exceptions.ClientNotStarted:
         await message.reply("<b>Client not started yet</b>")
