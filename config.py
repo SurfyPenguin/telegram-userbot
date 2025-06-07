@@ -14,6 +14,7 @@ AUTH_USERS = ["me"]
 # Music/Video stream config
 TITLE_LIMIT = 40
 MUSIC_PREFIXES = ["!"]
+MUSIC_USERS = ["me"]
 
 # DC info
 DCS = {

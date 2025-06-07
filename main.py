@@ -3,8 +3,15 @@ from config import API_ID, API_HASH
 
 plugins = dict(root = "plugins")
 
-app = Client("my_account", api_id=API_ID, api_hash=API_HASH, plugins= plugins)
+with open("session.txt", "r") as file:
+    session = file.read()
 
+app = Client(
+    name = "rymer",
+    session_string= session,
+    plugins= plugins,
+    in_memory = True,
+)
 
 if __name__ == "__main__":
     print("running...")

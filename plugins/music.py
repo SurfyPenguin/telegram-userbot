@@ -1,15 +1,13 @@
 from main import app
 import asyncio
+from pytgcalls import PyTgCalls, idle, filters as fl, exceptions
+from config import MUSIC_USERS , TITLE_LIMIT, MUSIC_PREFIXES
 from pyrogram import Client, filters
-from pyrogram.errors import ChatAdminRequired
 from pyrogram.types import Message
-from pytgcalls.types import AudioQuality, Update, StreamEnded, MediaStream, VideoQuality
 from pyrogram.enums import ParseMode
-from pytgcalls import PyTgCalls, idle, filters as fl
-from config import AUTH_USERS, TITLE_LIMIT as LIMIT, MUSIC_PREFIXES as PREFIXES
-from pytgcalls import exceptions
+from pytgcalls.types import MediaStream, AudioQuality, VideoQuality, StreamEnded
+from pyrogram.errors import ChatAdminRequired
 from yt_dlp import YoutubeDL
-from typing import Dict, List, Tuple
 
 ydl_opts = {
     "quiet" : True,
@@ -19,183 +17,207 @@ ydl_opts = {
     "gettitle" : True
 }
 
-ytdl = YoutubeDL(ydl_opts)
-
-class Stream:
-    """Userbot video streaming method,  Implemented using PyTgCalls
-    Parameters:
-        app (```pyrogram.Client```):
-            Requires user client instance not a bot instance.
-    """
-
+class Streamer:
+    
     def __init__(self, app : Client):
-        self.app : Client = app
-        self.player : PyTgCalls = PyTgCalls(app)
-        self.running : bool = False
-        self.queue : Dict[int, List[Tuple[str, str]]] = {}  #type hiting for code editors
-        self._lock = asyncio.Lock()
+        self._app = app
+        self.player = PyTgCalls(app)
+        self._running = False
+        self.queue = {}
 
-    async def start(self) -> None:
-        if not self.running:
+    async def start(self):
+        if not self._running:
             await self.player.start()
-            self.running = True
+            self._running = True
 
-    async def addqueue(self, chat_id, link) -> None:
+    async def get_title(self, link):
+        with YoutubeDL(ydl_opts) as ytdl:
+            title = ytdl.extract_info(link).get("title")
+        return title[:TITLE_LIMIT] + "..." if len(title) >= TITLE_LIMIT else title
+
+    async def add_queue(self, chat_id, link):
         if chat_id not in self.queue.keys():
             self.queue[chat_id] = []
-        title = await self.get_title(link)
-        self.queue[chat_id].append((link, title))
+        self.queue[chat_id].append([await self.get_title(link), link])
 
-    async def get_title(self, link) -> str:
-        title = ytdl.extract_info(link, False).get("title")
-        if len(title) >= LIMIT:
-            return title[:LIMIT] + "..."
-        else:
-            return title
+    async def stream(self, chat_id, audio_quality = AudioQuality.MEDIUM, video_quality = VideoQuality.SD_360p):
 
-    async def stream(self, chat_id : int | str, link : str, audio_quality = AudioQuality.MEDIUM, video_quality= VideoQuality.HD_720p):
-            
-            async with self._lock:
-                await self.start()
-                if chat_id not in self.queue.keys():
-                    self.queue[chat_id] = []
+        title, link = self.queue[chat_id][0]
 
-                await self.app.send_message(chat_id, f"Now streaming <a href='{link}'>{await self.get_title(link)}</a>", disable_web_page_preview=True)
+        await self.start()
+        await self._app.send_message(chat_id, f"<b>Now streaming <a href='{link}'>{title}</a></b>", disable_web_page_preview = True)
 
-                await self.player.play(
-                    chat_id,
-                    MediaStream(
-                        link,
-                        audio_quality,
-                        video_quality,
-                    )
+        if "music" in link:
+            await self.player.play(
+                chat_id = chat_id,
+                stream = MediaStream(
+                    media_path = link,
+                    audio_parameters = audio_quality,
+                    video_flags = MediaStream.Flags.IGNORE,
                 )
-                # await idle()
+            )
+            return
 
-    async def command_handler(self, message : Message):
+        await self.player.play(
+            chat_id = chat_id,
+            stream = MediaStream(
+                media_path = link,
+                audio_parameters = audio_quality,
+                video_parameters = video_quality, 
+            ) 
+        )
+    
+    async def action_handler(self, message : Message):
         action = message.command[0]
         chat_id = message.chat.id
         match action:
-            case "leavecall":
+            case "leave":
                 await self.player.leave_call(chat_id)
-                await message.reply("`left call...`")
+                await message.reply("<i>left call...</i>")
 
             case "pause":
                 await self.player.pause(chat_id)
-                await message.reply("`paused...`")
+                await message.reply("<i>paused...</i>")
 
             case "resume":
                 await self.player.resume(chat_id)
-                await message.reply("`resumed...`")
+                await message.reply("<i>resumed...</i>")
 
             case "mute":
                 await self.player.mute(chat_id)
-                await message.reply("`muted...`")
+                await message.reply("<i>muted...</i>")
 
-            case "umute":
+            case "unmute":
                 await self.player.unmute(chat_id)
-                await message.reply("`unmuted...`")
+                await message.reply("<i>unmuted...</i>")
 
             case _:
-                await message.reply("`Invalid media action`")
+                await message.reply("<i>Invalid media action<i>") # won't reach this case but anyways
 
-streamer = Stream(app)
+streamer = Streamer(app)
 
-@streamer.player.on_update(fl.stream_end(stream_type=StreamEnded.Type.VIDEO))
-async def handler(_ : PyTgCalls, update : StreamEnded):
-    queue = streamer.queue[update.chat_id]
-    print(update)
-    print(queue)
-    if len(queue) > 0:
-        next = streamer.queue[update.chat_id][0]
-        streamer.queue[update.chat_id].pop(0)
+@Client.on_message(filters.command("play", prefixes = MUSIC_PREFIXES) & filters.user(MUSIC_USERS))
+async def play_command(_, message : Message):
 
-        await app.send_message(update.chat_id, f"<b>Next playing <a href='{next[0]}'>{next[1]}</a> in 5 seconds...</b>", disable_web_page_preview=True)
-        await asyncio.sleep(5)
-
-        await streamer.stream(update.chat_id, next[0])
+    if len(message.command) != 2:
+        await message.reply("<b>Usage <code>/play yt-link</code></b>", parse_mode = ParseMode.HTML)
         return
     
-    if len(queue) == 0:
-        await app.send_message(update.chat_id, "<b>Video stream ended</b>")
-
-@Client.on_message(filters.command("play", prefixes= PREFIXES) & filters.user(AUTH_USERS))
-async def play_command(_, message : Message):
-    chat_id, link = message.chat.id, message.command[1]
-
-    try:
-        await streamer.stream(chat_id, link)
-
-    except exceptions.ClientNotStarted:
-        print("Client not started yet")
-    except FileNotFoundError:
-        await message.reply("File not found")
-    except exceptions.NoAudioSourceFound:
-        await message.reply("Audio source has no audio")
-    except exceptions.NoVideoSourceFound:
-        await message.reply("Video source has no video")
-    except exceptions.YtDlpError:
-        await message.reply("Unexpected Yt-Dlp error: check logs")
-    except ChatAdminRequired:
-        await message.reply("<b>I don't have permissions to manager video calls in this chat</b>")
-
-@Client.on_message(filters.command(["leavecall", "pause", "resume", "mute", "umute"], prefixes= PREFIXES) & filters.user(AUTH_USERS))
-async def command_handler(_, message : Message):
-
-    try:
-        await streamer.command_handler(message)
-
-    except exceptions.ClientNotStarted:
-        print("Client not started yet")
-    except exceptions.NotInCallError:
-        await message.reply("Join a call first or use /play")
-
-@Client.on_message(filters.command("add", prefixes= PREFIXES) & filters.user(AUTH_USERS))
-async def add_command(_, message : Message):
-
     link = message.command[1]
     chat_id = message.chat.id
+    try:
+        await streamer.add_queue(chat_id, link)
+        await streamer.stream(chat_id)
 
-    if chat_id not in streamer.queue.keys():
-        await streamer.stream(chat_id, link)
-        return
-    
-    await message.reply(f"Adding link to queue...")
-    await streamer.addqueue(message.chat.id, link)
+    except exceptions.ClientNotStarted:
+        await message.reply("<b>Client not started yet</b>")
+    except FileNotFoundError:
+        await message.reply("<b>File not found</b>")
+    except exceptions.NoAudioSourceFound:
+        await message.reply("<b>Audio source has no audio</b>")
+    except exceptions.NoVideoSourceFound:
+        await message.reply("<b>Video source has no video</b>")
+    except exceptions.YtDlpError:
+        await message.reply("<b>Unexpected Yt-Dlp error: check logs</b>")
+    except ChatAdminRequired:
+        await message.reply("<b>I don't have permissions to manage video calls in this chat</b>")
 
-@Client.on_message(filters.command("remove", prefixes= PREFIXES) & filters.user(AUTH_USERS))
-async def remove_from_queue_command(_, message : Message):
-
+@Client.on_message(filters.command("add", prefixes = MUSIC_PREFIXES) & filters.user(MUSIC_USERS))
+async def add_command(_, message : Message):
     if message.chat.id not in streamer.queue.keys():
-        await message.reply("<b>Nothing is streaming in this chat at the moment</b>")
+        await streamer.add_queue(message.chat.id, message.command[1])
+        await streamer.stream(message.chat.id)
         return
 
     if len(message.command) != 2:
-        await message.reply("usage: <code>/remove <queue-no></code>", parse_mode = ParseMode.HTML)
-        return
-
-    queue_id = int(message.command[1])
-    if queue_id <= 0:
-        await message.reply("Invalid queue number...")
+        message.reply("<b>Usage: <code>/add yt-link</code></b>")
         return
     
-    streamer.queue[message.chat.id].pop(queue_id-1)
-    await message.reply(f"Removed from queue: {queue_id}")
+    await message.reply("<b>Adding to queue...</b>")
+    await streamer.add_queue(message.chat.id, message.command[1])
 
-@Client.on_message(filters.command("queue", prefixes= PREFIXES) & filters.user(AUTH_USERS))
+
+@Client.on_message(filters.command("queue", prefixes = MUSIC_PREFIXES) & filters.user(MUSIC_USERS))
 async def show_queue_command(_, message : Message):
     chat_id = message.chat.id
-    
     if chat_id not in streamer.queue.keys():
-        await message.reply("<b>Nothing is streaming in this chat at the moment</b>")
+        await message.reply("<b>Nothing is streaming at the moment, use <code>/play yt-link</code> to start</b>")
         return
+    
     queue = streamer.queue[chat_id]
+    if len(queue) == 0:
+        await message.reply("<b>Queue is empty...</b>")
+        return
+    
+    queue_format = ""
+    for index, item in enumerate(queue):
+        if index == 0:
+            queue_format += f"<b>Currently Playing:\n{index}. <a href='{item[1]}'>{item[0]}</a></b>\n\n"
+            continue
+        if index == 1:
+            queue_format += f"<b>Next in queue:</b>\n"
+        queue_format += f"<b>{index}. <a href='{item[1]}'>{item[0]}</a></b>\n"
+    
+    await message.reply(queue_format, disable_web_page_preview = True)
+
+@Client.on_message(filters.command("remove", prefixes = MUSIC_PREFIXES) & filters.user(MUSIC_USERS))
+async def remove_command(_, message : Message):
+    chat_id = message.chat.id
+    if chat_id not in streamer.queue.keys():
+        await message.reply("<b>Nothing is streaming at the moment, use <code>/play yt-link</code> to start</b>")
+        return
+
+    if len(message.command) != 2:
+        await message.reply("<b>Usage: <code>/remove queue_no</code></b>")
+        return
+    
+    queue_id = int(message.command[1])
+    if queue_id <= 0:
+        await message.reply("<b>Invalid queue id</b>")
+        return
+    
+    streamer.queue[chat_id].pop(queue_id)
+    await message.reply(f"<b>Removed from queue: {queue_id}</b>")
+
+
+@streamer.player.on_update(fl.stream_end(stream_type=StreamEnded.Type.VIDEO))
+async def handler(_ : PyTgCalls, update : StreamEnded):
+    chat_id = update.chat_id
+    streamer.queue[chat_id].pop(0)
+    queue = streamer.queue[chat_id]
+    print(queue)
 
     if len(queue) == 0:
-        await message.reply("<b>Queue is empty, use <code>/add yt-link</code> to add one</b>", parse_mode = ParseMode.HTML)
+        await app.send_message(chat_id, f"<b>Stream Ended</b>")
         return
+    
+    await app.send_message(chat_id, f"<b>Next streaming <a href='{queue[0][1]}'>{queue[0][0]}</a> in 5 seconds...</b>", disable_web_page_preview = True)
+    await asyncio.sleep(5)
 
-    queue_format = "<b>Next in queue...</b>\n"
-    for index, item in enumerate(queue):
-        queue_format += f"<b>{index+1}.</b> <a href='{item[0]}'>{item[1]}</a>\n"
-    await message.reply(queue_format, disable_web_page_preview=True)
+    try:
+        await streamer.stream(chat_id)
+
+    except exceptions.ClientNotStarted:
+        await app.send_message(chat_id, "<b>Client not started yet</b>")
+    except FileNotFoundError:
+        await app.send_message(chat_id, "<b>File not found</b>")
+    except exceptions.NoAudioSourceFound:
+        await app.send_message(chat_id, "<b>Audio source has no audio</b>")
+    except exceptions.NoVideoSourceFound:
+        await app.send_message(chat_id, "<b>Video source has no video</b>")
+    except exceptions.YtDlpError:
+        await app.send_message(chat_id, "<b>Unexpected Yt-Dlp error: check logs</b>")
+    except ChatAdminRequired:
+        await app.send_message(chat_id, "<b>I don't have permissions to manage video calls in this chat</b>")
+    
+
+@Client.on_message(filters.command(["leave", "pause", "resume", "mute", "unmute"], prefixes= MUSIC_PREFIXES) & filters.user(MUSIC_USERS))
+async def command_handler(_, message : Message):
+
+    try:
+        await streamer.action_handler(message)
+
+    except exceptions.ClientNotStarted:
+        await message.reply("<b>Client not started yet</b>")
+    except exceptions.NotInCallError:
+        await message.reply("<b>Join a call first or use /play</b>")
