@@ -73,6 +73,7 @@ class Streamer:
         chat_id = message.chat.id
         match action:
             case "leave":
+                self.queue[chat_id] = []
                 await self.player.leave_call(chat_id)
                 await message.reply("<i>left call...</i>")
 
