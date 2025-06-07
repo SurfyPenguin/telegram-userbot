@@ -30,7 +30,7 @@ class Streamer:
             await self.player.start()
             self._running = True
 
-    async def get_title(self, link):
+    def get_title(self, link):
         with YoutubeDL(ydl_opts) as ytdl:
             title = ytdl.extract_info(link).get("title")
         return title[:TITLE_LIMIT] + "..." if len(title) >= TITLE_LIMIT else title
@@ -38,7 +38,8 @@ class Streamer:
     async def add_queue(self, chat_id, link):
         if chat_id not in self.queue.keys():
             self.queue[chat_id] = []
-        self.queue[chat_id].append([await self.get_title(link), link])
+        title = await asyncio.to_thread(self.get_title, link)
+        self.queue[chat_id].append([title, link])
 
     async def stream(self, chat_id, audio_quality = AudioQuality.MEDIUM, video_quality = VideoQuality.SD_360p):
 
@@ -130,7 +131,7 @@ async def add_command(_, message : Message):
         return
 
     if len(message.command) != 2:
-        message.reply("<b>Usage: <code>/add yt-link</code></b>")
+        await message.reply("<b>Usage: <code>/add yt-link</code></b>")
         return
     
     await message.reply("<b>Adding to queue...</b>")
@@ -185,7 +186,6 @@ async def handler(_ : PyTgCalls, update : StreamEnded):
     chat_id = update.chat_id
     streamer.queue[chat_id].pop(0)
     queue = streamer.queue[chat_id]
-    print(queue)
 
     if len(queue) == 0:
         await app.send_message(chat_id, f"<b>Stream Ended</b>")
