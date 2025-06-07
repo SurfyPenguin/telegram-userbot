@@ -228,6 +228,43 @@ async def remove_command(_, message : Message):
     streamer.queue[chat_id].pop(queue_id)
     await message.reply(f"<b>Removed from queue: {queue_id}</b>")
 
+@Client.on_message(filters.command("skip", prefixes = MUSIC_PREFIXES) & filters.user(MUSIC_USERS))
+async def skip_command(_, message : Message):
+    chat_id = message.chat.id
+    if chat_id not in streamer.queue.keys():
+        await message.reply("<b>Nothing is streaming at the moment, use <code>/play yt-link</code> to start</b>")
+        return
+    
+    if len(streamer.queue[chat_id]) == 0:
+        await message.reply("<b>Queue is empty...</b>")
+        return
+    
+    if len(streamer.queue[chat_id]) == 1:
+        await message.reply("<b>Can't skip, theres nothing next in queue.\nUse <code>/leave</code> instead to end the stream</b>")
+        return
+    
+    streamer.queue[chat_id].pop(0)
+    queue = streamer.queue[chat_id]
+    if len(queue) == 0:
+        await app.send_message(chat_id, f"<b>Stream Ended</b>")
+        return
+    
+    try:
+        await streamer.stream(chat_id)
+
+    except exceptions.ClientNotStarted:
+        await app.send_message(chat_id, "<b>Client not started yet</b>")
+    except FileNotFoundError:
+        await app.send_message(chat_id, "<b>File not found</b>")
+    except exceptions.NoAudioSourceFound:
+        await app.send_message(chat_id, "<b>Audio source has no audio</b>")
+    except exceptions.NoVideoSourceFound:
+        await app.send_message(chat_id, "<b>Video source has no video</b>")
+    except exceptions.YtDlpError:
+        await app.send_message(chat_id, "<b>Unexpected Yt-Dlp error: check logs</b>")
+    except ChatAdminRequired:
+        await app.send_message(chat_id, "<b>I don't have permissions to manage video calls in this chat</b>")
+
 
 @streamer.player.on_update(fl.stream_end(stream_type=StreamEnded.Type.VIDEO))
 async def handler(_ : PyTgCalls, update : StreamEnded):
