@@ -7,7 +7,7 @@ with open("session.txt", "r") as file:
     session = file.read()
 
 app = Client(
-    name = "rymer",
+    name = "acc",
     session_string= session,
     plugins= plugins,
     in_memory = True,

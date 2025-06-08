@@ -50,11 +50,15 @@ class Streamer:
 
         if "music.youtube.com" in link:
             link = link.replace("music.youtube.com", "youtube.com")
+            if "&si" in link:
+                index = link.index("&si")
+                link = link.replace(link[index:], "")
+                
             await self.player.play(
                 chat_id = chat_id,
                 stream = MediaStream(
                     media_path = link,
-                    audio_parameters = audio_quality,
+                    audio_parameters = AudioQuality.HIGH,
                     video_flags = MediaStream.Flags.IGNORE,
                 ) 
             )
@@ -185,6 +189,22 @@ async def add_command(app : Client, message : Message):
     await message.reply("<b>Adding to queue...</b>")
     await streamer.add_queue(message.chat.id, message.command[1])
 
+@Client.on_message(filters.command("now", prefixes = MUSIC_PREFIXES) & filters.user(MUSIC_USERS))
+async def now_command(_, message : Message):
+    chat_id = message.chat.id
+    if chat_id not in streamer.queue.keys():
+        await message.reply("<b>Nothing is streaming at the moment, use <code>/play yt-link</code> to start</b>")
+        return
+    
+    queue = streamer.queue[chat_id]
+    if len(queue) == 0:
+        await message.reply("<b>Queue is empty...</b>")
+        return
+    
+    queue_format = f"<b>Currently Playing:\n<a href='{queue[0][1]}'>{queue[0][0]}</a></b>"
+    await message.reply(queue_format, disable_web_page_preview = True)
+
+
 
 @Client.on_message(filters.command("queue", prefixes = MUSIC_PREFIXES) & filters.user(MUSIC_USERS))
 async def show_queue_command(_, message : Message):
@@ -221,10 +241,10 @@ async def remove_command(_, message : Message):
         return
     
     queue_id = int(message.command[1])
-    if queue_id <= 0:
+    if queue_id <= 0 or queue_id >= len(streamer.queue[chat_id]):
         await message.reply("<b>Invalid queue id</b>")
         return
-    
+
     streamer.queue[chat_id].pop(queue_id)
     await message.reply(f"<b>Removed from queue: {queue_id}</b>")
 
