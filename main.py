@@ -3,14 +3,11 @@ from config import API_ID, API_HASH
 
 plugins = dict(root = "plugins")
 
-with open("session.txt", "r") as file:
-    session = file.read()
-
 app = Client(
     name = "acc",
-    session_string= session,
     plugins= plugins,
-    in_memory = True,
+    api_id = API_ID,
+    api_hash = API_HASH
 )
 
 if __name__ == "__main__":
