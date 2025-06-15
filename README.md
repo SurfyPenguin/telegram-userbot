@@ -14,16 +14,18 @@ Just the things needed.
 - `/alive`
 - `/addfed`
 - `/rmfed`
+- `/fban`
 - `/ban`
 - `/unban`
 - `/promote`
+- `/demote`
 ### prefix = ! (music commands require additional account for smooth experience; Haven't implemented multiple account in this userbot)
-- `/fban`
 - `/play`
 - `/add`
 - `/mute`
 - `/unmute`
 - `/pause`
 - `/resume`
+- `/leave`
 
 ~~more to be added soon.~~
