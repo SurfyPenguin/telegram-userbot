@@ -2,7 +2,7 @@
 
 A simple telegram userbot made with pyrofork(mayuri) python library.
 
-# Host locally
+## Host locally
 1. Create virtual environment and install requirements from `requirements.txt`.
 
 ```python
@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 
 
-# Commands
+## Commands
 - Prefixes can be changed in `config.py`
 - `?` -> __Admin commands__
 - `!` -> __Music commands__
