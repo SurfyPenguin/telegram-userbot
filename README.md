@@ -1,11 +1,13 @@
-# Telegram User Bot
+# Pyrogram userbot
 
-Just the things needed.
+A simple telegram userbot made with pyrofork(mayuri) python library.
 
 
-## Commands
-- code is goofy as hell, I'm a python begineer, let that slide
-### prefix = ?
+# Commands
+- Prefixes can be changed in `config.py`
+- `?` -> __Admin commands__
+- `!` -> __Music commands__
+## Prefix: `?`
 - `/purge`
 - `/info`
 - `/spurge`
@@ -19,7 +21,7 @@ Just the things needed.
 - `/unban`
 - `/promote`
 - `/demote`
-### prefix = ! (music commands require additional account for smooth experience; Haven't implemented multiple account in this userbot)
+## Prefix: `!`
 - `/play`
 - `/add`
 - `/mute`
@@ -28,4 +30,8 @@ Just the things needed.
 - `/resume`
 - `/leave`
 
-~~more to be added soon.~~
+## Known Issues
+`Database locked` : Common error faced when using the music commands.
+
+## __No Progress__
+I made this mini project to learn python as my first language. I no longer use telegram, so the purpose of this __project is over__.
