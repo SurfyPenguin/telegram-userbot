@@ -1,8 +1,0 @@
-pyrofork == 2.3.62
-TgCrypto-pyrofork == 1.2.7
-python-dotenv
-ping3
-requests
-py-tgcalls == 2.2.1
-yt-dlp == 2025.5.22
-psutil
