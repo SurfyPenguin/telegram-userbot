@@ -1,9 +1,17 @@
+import asyncio
+from ping3 import ping
 from pyrogram import Client, filters
-from pyrogram.types import Message
 from pyrogram.enums import ParseMode
-from helpers.ping import do_ping
-from config import DCS, PREFIXES, AUTH_USERS
+from pyrogram.types import Message
+from userbot import DCS, PREFIXES, AUTH_USERS
 from time import perf_counter
+
+async def do_ping(host) -> str:
+    result = await asyncio.to_thread(lambda : ping(host)*1000)
+    if result:
+        return f"{result:.2f}"
+    else:
+        return "Timed Out"
 
 # Ping data centres command
 @Client.on_message(filters.command("pingdc", prefixes= PREFIXES) & filters.user(AUTH_USERS))

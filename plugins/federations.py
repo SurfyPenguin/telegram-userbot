@@ -1,6 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from config import PREFIXES, AUTH_USERS
+from userbot import PREFIXES, AUTH_USERS
 # from helpers.chat import get_user
 import json
 import asyncio

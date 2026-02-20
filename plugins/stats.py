@@ -1,9 +1,8 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.errors import SlowmodeWait
-from config import PREFIXES, AUTH_USERS, DCS
-from helpers.ping import do_ping
-import time
+from userbot import PREFIXES, AUTH_USERS, DCS
+from ping import do_ping
 from datetime import datetime
 from psutil import cpu_percent, virtual_memory
 

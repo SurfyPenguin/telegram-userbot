@@ -2,9 +2,9 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
 from pyrogram.errors import PeerIdInvalid, UsernameInvalid, UsernameNotOccupied, UserAdminInvalid, MessageDeleteForbidden, ChatAdminRequired
-from config import CHUNK, PREFIXES, AUTH_USERS
+from userbot import CHUNK, PREFIXES, AUTH_USERS
 from datetime import datetime
-from main import app
+from userbot.main import app
 from pyrogram.types import ChatPrivileges
 
 

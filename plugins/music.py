@@ -1,7 +1,7 @@
-from main import app
+from userbot.main import app
 import asyncio
 from pytgcalls import PyTgCalls, idle, filters as fl, exceptions
-from config import MUSIC_USERS , TITLE_LIMIT, MUSIC_PREFIXES
+from userbot import MUSIC_USERS , TITLE_LIMIT, MUSIC_PREFIXES
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode, ChatMemberStatus
