@@ -1,13 +1,12 @@
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from userbot import PREFIXES, AUTH_USERS
-# from helpers.chat import get_user
+from userbot import PREFIXES, AUTH_USERS, FED_FILE
 import json
 import asyncio
 
 SPACE = " "
 
-with open("feds.json", "r") as file:
+with open(FED_FILE, "r") as file:
     feds = json.load(file)
 
 async def get_json(file_path : str) -> dict:
@@ -20,7 +19,7 @@ async def write_json(file_path , data) -> bool:
         json.dump(data, file)
 
 class FedManager:
-    def __init__(self, file_path = "feds.json"):
+    def __init__(self, file_path = FED_FILE):
         self.file_path = file_path
         self._cache = feds
         self._lock = asyncio.Lock()
