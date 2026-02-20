@@ -1,3 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Workspace files
+.vscode
+
+# just in case
 *.log
 **/__pycache__
 *.pyc
@@ -6,4 +21,3 @@
 *.mp4
 *.mp3
 *.txt
-.venv/
