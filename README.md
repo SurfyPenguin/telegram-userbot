@@ -26,7 +26,7 @@ pip install .
 ```
 5. Run project
 ```bash
-python3 main.py
+python3 userbot/main.py
 ```
 ---
 
@@ -45,7 +45,7 @@ uv sync
 ```
 4. Run project
 ```bash
-uv run main.py
+uv run userbot/main.py
 ```
 
 
