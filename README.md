@@ -48,7 +48,25 @@ uv sync
 uv run userbot/main.py
 ```
 
-
+## Project structure
+```bash
+telegram-userbot/
+├── data
+│   └── feds.json
+├── plugins
+│   ├── admin.py
+│   ├── federations.py
+│   ├── music.py
+│   ├── ping.py
+│   └── stats.py
+├── pyproject.toml
+├── README.md
+├── userbot
+│   ├── config.py
+│   ├── __init__.py
+│   └── main.py
+└── uv.lock
+```
 
 ## Commands
 - Prefixes can be changed in `config.py`
