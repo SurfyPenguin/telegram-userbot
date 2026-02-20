@@ -1,18 +1,30 @@
-# Pyrogram userbot
+# Telegram Userbot
 
-A simple telegram userbot made with pyrofork(mayuri) python library.
+## A multipurpose telegram userbot which can be used for moderation as well as playing music in telegram vc.
 
 ## Host Locally
+Put API_ID and API_HASH in `.env`. Get API ID and hash from [here](https://my.telegram.org/auth) by creating an application if haven't already created.
+
+---
+
 * __Using Pip__
-1. Create virtual environment and install requirements from `requirements.txt`.
-
+1. Clone repository
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/SurfyPenguin/telegram-userbot.git
 ```
-2. Put API_ID and API_HASH in `.env`. Get API ID and hash from [here](https://my.telegram.org/auth) by creating an application if haven't already created.
-
-3. Follow the instructions on the screen and run the userbot.
-
+2. Create virutal environment
+```bash
+python3 -m venv .venv
+```
+3. Activate `.venv`
+```bash
+source .venv/bin/activate
+```
+4. Install dependencies
+```bash
+pip install .
+```
+5. Run project
 ```bash
 python3 main.py
 ```
