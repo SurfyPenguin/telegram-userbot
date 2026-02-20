@@ -2,18 +2,38 @@
 
 A simple telegram userbot made with pyrofork(mayuri) python library.
 
-## Host locally
+## Host Locally
+* __Using Pip__
 1. Create virtual environment and install requirements from `requirements.txt`.
 
-```sh
+```bash
 pip install -r requirements.txt
 ```
 2. Put API_ID and API_HASH in `.env`. Get API ID and hash from [here](https://my.telegram.org/auth) by creating an application if haven't already created.
 
 3. Follow the instructions on the screen and run the userbot.
 
-```sh
+```bash
 python3 main.py
+```
+---
+
+* __Using uv__
+1. Clone repository
+```bash
+git clone https://github.com/SurfyPenguin/telegram-userbot.git
+```
+2. Create virtual environment
+```bash
+uv venv
+```
+3. Install dependencies
+```bash
+uv sync
+```
+4. Run project
+```bash
+uv run main.py
 ```
 
 
